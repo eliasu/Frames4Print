@@ -1048,10 +1048,13 @@ document.querySelectorAll('.edge-btn').forEach(btn => {
 document.getElementById('addPositionBtn').addEventListener('click', () => {
   const mm = parseFloat(document.getElementById('positionMm').value);
   if (isNaN(mm)) return;
-  const label = guideState.axis === 'X'
+  const axis = guideState.axis;
+  const isDupe = guideState.queue.some(g => g.type === 'position' && g.axis === axis && g.mm === mm);
+  if (isDupe) return;
+  const label = axis === 'X'
     ? `Vertical · ${mm}mm from left trim`
     : `Horizontal · ${mm}mm from top trim`;
-  guideState.queue.push({ type: 'position', axis: guideState.axis, mm, label });
+  guideState.queue.push({ type: 'position', axis, mm, label });
   document.getElementById('positionMm').value = '';
   updatePositionHelper();
   renderGuideQueue();
@@ -1063,6 +1066,8 @@ document.getElementById('addEdgeBtn').addEventListener('click', () => {
   if (isNaN(mm) || guideState.selectedEdges.size === 0) return;
   for (const edge of ['top', 'right', 'bottom', 'left']) {
     if (!guideState.selectedEdges.has(edge)) continue;
+    const isDupe = guideState.queue.some(g => g.type === 'edge' && g.edge === edge && g.mm === mm);
+    if (isDupe) continue;
     const label = `${edge.charAt(0).toUpperCase() + edge.slice(1)} · ${mm}mm`;
     guideState.queue.push({ type: 'edge', edge, mm, label });
   }
