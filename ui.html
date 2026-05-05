@@ -28,7 +28,6 @@
     font-family: var(--sans);
     font-size: 13px;
     padding: 0;
-    min-height: 100vh;
   }
 
   header {
@@ -596,6 +595,8 @@ document.getElementById('createBtn').addEventListener('click', () => {
       bleedPx: sel.bleedPx,
       widthMm: totalW,
       heightMm: totalH,
+      trimWidthMm: state.wMm,
+      trimHeightMm: state.hMm,
       multiplier: sel.k / gcd(totalW, totalH),
     }
   }, '*');
@@ -612,6 +613,7 @@ window.onmessage = e => {
 };
 
 render();
+parent.postMessage({ pluginMessage: { type: 'resize', height: document.body.scrollHeight } }, '*');
 </script>
 </body>
 </html>

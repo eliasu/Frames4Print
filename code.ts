@@ -1,13 +1,15 @@
-figma.showUI(__html__, { width: 420, height: 620 });
+figma.showUI(__html__, { width: 420, height: 500 });
 
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'create-frame') {
-    const { widthPx, heightPx, bleed, bleedMm, widthMm, heightMm, multiplier } = msg;
+    const { widthPx, heightPx, bleed, bleedMm, widthMm, heightMm, trimWidthMm, trimHeightMm, multiplier } = msg;
 
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
 
     const frame = figma.createFrame();
-    frame.name = `Print — ${widthMm}×${heightMm}mm${bleed ? ` +${bleedMm}mm bleed` : ''}`;
+    frame.name = bleed
+      ? `Print — ${trimWidthMm}×${trimHeightMm}mm + ${bleedMm}mm (${widthMm}×${heightMm}mm)`
+      : `Print — ${widthMm}×${heightMm}mm`;
     frame.resize(widthPx, heightPx);
 
     const center = figma.viewport.center;
@@ -30,6 +32,10 @@ figma.ui.onmessage = async (msg) => {
     }
 
     figma.ui.postMessage({ type: 'done' });
+  }
+
+  if (msg.type === 'resize') {
+    figma.ui.resize(420, msg.height);
   }
 
   if (msg.type === 'cancel') {
