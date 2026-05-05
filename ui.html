@@ -52,6 +52,36 @@
     font-family: var(--mono);
   }
 
+  .tab-bar {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 0;
+  }
+
+  .tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 10px 14px 8px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    margin-bottom: -1px;
+    transition: color 0.12s;
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
   .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 20px; }
 
   .section-label {
@@ -62,6 +92,29 @@
     color: var(--muted);
     margin-bottom: 8px;
   }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .section-header .section-label { margin-bottom: 0; }
+
+  .clear-link {
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .clear-link:hover { color: var(--text); }
 
   .format-grid {
     display: grid;
@@ -290,6 +343,154 @@
   .cta:active { transform: translateY(0); }
   .cta:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
+  .seg-ctrl {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .seg-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-radius: 5px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.12s;
+    text-align: center;
+  }
+
+  .seg-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .edge-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+
+  .edge-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 6px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.12s;
+  }
+
+  .edge-btn:hover { border-color: #444; color: var(--text); }
+  .edge-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+  .helper-text {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+    padding: 2px 0;
+  }
+
+  .guide-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .guide-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+
+  .gi-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .gi-del {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    transition: color 0.1s;
+  }
+
+  .gi-del:hover { color: var(--text); }
+
+  .guide-empty {
+    padding: 14px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--mono);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--text);
+  }
+
+  .info-card.warn {
+    border-color: rgba(255,160,0,0.4);
+    color: rgba(255,160,0,0.9);
+    background: rgba(255,160,0,0.06);
+  }
+
+  .info-card.ok {
+    border-color: rgba(200,255,0,0.3);
+    background: var(--accent-dim);
+    color: var(--text);
+  }
+
+  .info-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .refresh-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+
+  .refresh-btn:hover { border-color: #444; color: var(--text); }
+
   .hidden { display: none !important; }
 
   scrollbar-width: thin;
@@ -305,6 +506,12 @@
   <span>Print-ready frames for Figma</span>
 </header>
 
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="frame">Frame</button>
+  <button class="tab-btn" data-tab="guides">Guides</button>
+</div>
+
+<div id="tab-frame" class="tab-panel active">
 <div class="body">
 
   <div>
@@ -404,6 +611,97 @@
   <button class="cta" id="createBtn" disabled>Create Frame</button>
 
 </div>
+</div>
+
+<div id="tab-guides" class="tab-panel">
+<div class="body">
+
+  <div>
+    <div class="section-label">Add Guide</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="seg-ctrl" id="guideModeCtrl">
+        <button class="seg-btn active" data-mode="position">At position</button>
+        <button class="seg-btn" data-mode="edge">From edge</button>
+      </div>
+
+      <div id="modePosition">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="seg-ctrl" id="axisCtrl">
+            <button class="seg-btn active" data-axis="X">Vertical (X)</button>
+            <button class="seg-btn" data-axis="Y">Horizontal (Y)</button>
+          </div>
+          <div class="input-group">
+            <label>POSITION (MM)</label>
+            <input type="number" id="positionMm" placeholder="e.g. 22" min="0" step="0.5" />
+          </div>
+          <div class="helper-text" id="positionHelper">Vertical guide at Xmm from left trim edge</div>
+          <button class="cta" id="addPositionBtn" style="padding:9px;">+ Add Guide</button>
+        </div>
+      </div>
+
+      <div id="modeEdge" class="hidden">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="edge-grid">
+            <button class="edge-btn" data-edge="top">Top</button>
+            <button class="edge-btn" data-edge="right">Right</button>
+            <button class="edge-btn" data-edge="bottom">Bottom</button>
+            <button class="edge-btn" data-edge="left">Left</button>
+          </div>
+          <div class="input-group">
+            <label>DISTANCE FROM TRIM EDGE (MM)</label>
+            <input type="number" id="edgeMm" placeholder="e.g. 3" min="0" step="0.5" />
+          </div>
+          <button class="cta" id="addEdgeBtn" style="padding:9px;">+ Add Guides</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-header">
+      <div class="section-label">Guide Queue</div>
+      <button class="clear-link" id="clearAllBtn">Clear all</button>
+    </div>
+    <div id="guideList"></div>
+  </div>
+
+  <div>
+    <div class="section-label">Apply to</div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div class="seg-ctrl" id="applyToCtrl">
+        <button class="seg-btn active" data-target="new">New Frame</button>
+        <button class="seg-btn" data-target="selected">Selected Frame</button>
+      </div>
+
+      <div id="applyNew">
+        <div id="frameInfoCard" class="info-card warn">Configure a format in the Frame tab first</div>
+      </div>
+
+      <div id="applySelected" class="hidden">
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div class="info-card-row">
+            <div class="info-card" id="selectionCard" style="flex:1;">Click Refresh to check selection</div>
+            <button class="refresh-btn" id="refreshBtn" style="margin-left:8px;">↻ Refresh</button>
+          </div>
+          <div id="removeGuideRow" class="toggle-row hidden">
+            <div class="toggle-label">
+              <span>Remove existing guides</span>
+              <span>Bleed guides (if any) are kept</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="removeExistingToggle" />
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <button class="cta" id="applyBtn" disabled>Create Frame</button>
+    </div>
+  </div>
+
+</div>
+</div>
 
 <script>
 const FORMATS = [
@@ -423,6 +721,16 @@ let state = {
   minDpi: true,
   selectedMult: null,
   multipliers: [],
+};
+
+let guideState = {
+  mode: 'position',
+  axis: 'X',
+  selectedEdges: new Set(),
+  applyTarget: 'new',
+  queue: [],
+  selectionInfo: null,
+  selectionQueried: false,
 };
 
 function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
@@ -470,6 +778,7 @@ function render() {
     document.getElementById('multList').classList.add('hidden');
     document.getElementById('detailCard').style.display = 'none';
     document.getElementById('createBtn').disabled = true;
+    updateFrameInfoCard();
     return;
   }
 
@@ -485,6 +794,7 @@ function render() {
     multList.classList.add('hidden');
     document.getElementById('detailCard').style.display = 'none';
     document.getElementById('createBtn').disabled = true;
+    updateFrameInfoCard();
     return;
   }
 
@@ -527,7 +837,100 @@ function render() {
     }
     document.getElementById('createBtn').disabled = false;
   }
+
+  updateFrameInfoCard();
 }
+
+function getFrameConfigLabel() {
+  if (!state.wMm || !state.hMm || !state.selectedMult) return null;
+  const fmt = FORMATS.find(f => f.w === state.wMm && f.h === state.hMm);
+  const fmtName = fmt ? fmt.name : `${state.wMm}×${state.hMm}mm`;
+  const ppi = state.selectedMult.ppi;
+  const bleedPart = state.bleed ? ` · +${state.bleedMm}mm bleed` : '';
+  return `${fmtName} · ${state.wMm}×${state.hMm}mm · ${ppi} PPI${bleedPart}`;
+}
+
+function updateFrameInfoCard() {
+  const card = document.getElementById('frameInfoCard');
+  const label = getFrameConfigLabel();
+  if (label) {
+    card.textContent = label;
+    card.className = 'info-card ok';
+  } else {
+    card.textContent = 'Configure a format in the Frame tab first';
+    card.className = 'info-card warn';
+  }
+  updateApplyBtn();
+}
+
+function updateApplyBtn() {
+  const btn = document.getElementById('applyBtn');
+  if (guideState.applyTarget === 'new') {
+    const hasConfig = !!(state.wMm && state.hMm && state.selectedMult);
+    btn.disabled = !hasConfig;
+    btn.textContent = 'Create Frame';
+  } else {
+    const info = guideState.selectionInfo;
+    const hasFrame = info && info.found && info.parseable;
+    const hasGuides = guideState.queue.length > 0;
+    btn.disabled = !hasFrame || !hasGuides;
+    btn.textContent = 'Apply Guides to Frame';
+  }
+}
+
+function renderGuideQueue() {
+  const list = document.getElementById('guideList');
+  if (guideState.queue.length === 0) {
+    list.innerHTML = '<div class="guide-empty">No guides added</div>';
+    return;
+  }
+  list.innerHTML = '<div class="guide-list">' + guideState.queue.map((g, i) => `
+    <div class="guide-item">
+      <span class="gi-label">${g.label}</span>
+      <button class="gi-del" data-idx="${i}">×</button>
+    </div>
+  `).join('') + '</div>';
+  list.querySelectorAll('.gi-del').forEach(btn => {
+    btn.addEventListener('click', () => {
+      guideState.queue.splice(parseInt(btn.dataset.idx), 1);
+      renderGuideQueue();
+      updateApplyBtn();
+    });
+  });
+}
+
+function updatePositionHelper() {
+  const mm = parseFloat(document.getElementById('positionMm').value) || 0;
+  const helper = document.getElementById('positionHelper');
+  if (guideState.axis === 'X') {
+    helper.textContent = `Vertical guide at ${mm}mm from left trim edge`;
+  } else {
+    helper.textContent = `Horizontal guide at ${mm}mm from top trim edge`;
+  }
+}
+
+function computeGuidesForQueue(queueItem, frameW, frameH, bleedMm, multiplier) {
+  const bleedPx = bleedMm * multiplier;
+  if (queueItem.type === 'position') {
+    return [{ axis: queueItem.axis, offset: bleedPx + queueItem.mm * multiplier }];
+  }
+  const guides = [];
+  const dist = queueItem.mm * multiplier;
+  if (queueItem.edge === 'top') guides.push({ axis: 'Y', offset: bleedPx + dist });
+  if (queueItem.edge === 'bottom') guides.push({ axis: 'Y', offset: frameH - bleedPx - dist });
+  if (queueItem.edge === 'left') guides.push({ axis: 'X', offset: bleedPx + dist });
+  if (queueItem.edge === 'right') guides.push({ axis: 'X', offset: frameW - bleedPx - dist });
+  return guides;
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
 
 const grid = document.getElementById('fmtGrid');
 FORMATS.forEach(fmt => {
@@ -608,11 +1011,184 @@ document.getElementById('createBtn').addEventListener('click', () => {
   }, 2000);
 });
 
+document.getElementById('guideModeCtrl').querySelectorAll('.seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    guideState.mode = btn.dataset.mode;
+    document.getElementById('guideModeCtrl').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('modePosition').classList.toggle('hidden', guideState.mode !== 'position');
+    document.getElementById('modeEdge').classList.toggle('hidden', guideState.mode !== 'edge');
+  });
+});
+
+document.getElementById('axisCtrl').querySelectorAll('.seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    guideState.axis = btn.dataset.axis;
+    document.getElementById('axisCtrl').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updatePositionHelper();
+  });
+});
+
+document.getElementById('positionMm').addEventListener('input', updatePositionHelper);
+
+document.querySelectorAll('.edge-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const edge = btn.dataset.edge;
+    if (guideState.selectedEdges.has(edge)) {
+      guideState.selectedEdges.delete(edge);
+      btn.classList.remove('active');
+    } else {
+      guideState.selectedEdges.add(edge);
+      btn.classList.add('active');
+    }
+  });
+});
+
+document.getElementById('addPositionBtn').addEventListener('click', () => {
+  const mm = parseFloat(document.getElementById('positionMm').value);
+  if (isNaN(mm)) return;
+  const label = guideState.axis === 'X'
+    ? `Vertical · ${mm}mm from left trim`
+    : `Horizontal · ${mm}mm from top trim`;
+  guideState.queue.push({ type: 'position', axis: guideState.axis, mm, label });
+  document.getElementById('positionMm').value = '';
+  updatePositionHelper();
+  renderGuideQueue();
+  updateApplyBtn();
+});
+
+document.getElementById('addEdgeBtn').addEventListener('click', () => {
+  const mm = parseFloat(document.getElementById('edgeMm').value);
+  if (isNaN(mm) || guideState.selectedEdges.size === 0) return;
+  for (const edge of ['top', 'right', 'bottom', 'left']) {
+    if (!guideState.selectedEdges.has(edge)) continue;
+    const label = `${edge.charAt(0).toUpperCase() + edge.slice(1)} · ${mm}mm`;
+    guideState.queue.push({ type: 'edge', edge, mm, label });
+  }
+  renderGuideQueue();
+  updateApplyBtn();
+});
+
+document.getElementById('clearAllBtn').addEventListener('click', () => {
+  guideState.queue = [];
+  renderGuideQueue();
+  updateApplyBtn();
+});
+
+document.getElementById('applyToCtrl').querySelectorAll('.seg-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    guideState.applyTarget = btn.dataset.target;
+    document.getElementById('applyToCtrl').querySelectorAll('.seg-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('applyNew').classList.toggle('hidden', guideState.applyTarget !== 'new');
+    document.getElementById('applySelected').classList.toggle('hidden', guideState.applyTarget !== 'selected');
+    updateApplyBtn();
+  });
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  guideState.selectionQueried = true;
+  parent.postMessage({ pluginMessage: { type: 'get-selection' } }, '*');
+});
+
+function renderSelectionCard() {
+  const card = document.getElementById('selectionCard');
+  const removeRow = document.getElementById('removeGuideRow');
+  if (!guideState.selectionQueried) {
+    card.textContent = 'Click Refresh to check selection';
+    card.className = 'info-card';
+    removeRow.classList.add('hidden');
+    return;
+  }
+  const info = guideState.selectionInfo;
+  if (!info || !info.found) {
+    card.textContent = 'Select a single Frames4Print frame';
+    card.className = 'info-card warn';
+    removeRow.classList.add('hidden');
+    return;
+  }
+  if (!info.parseable) {
+    card.textContent = 'Frame name not recognized — rename it using this plugin to use this feature';
+    card.className = 'info-card warn';
+    removeRow.classList.add('hidden');
+    return;
+  }
+  const bleedPart = info.bleedMm > 0 ? ` + ${info.bleedMm}mm bleed` : '';
+  card.textContent = `${info.trimW}×${info.trimH}mm${bleedPart}`;
+  card.className = 'info-card ok';
+  removeRow.classList.remove('hidden');
+  updateApplyBtn();
+}
+
+document.getElementById('applyBtn').addEventListener('click', () => {
+  if (guideState.applyTarget === 'new') {
+    const sel = state.selectedMult;
+    if (!sel) return;
+    const totalW = state.bleed ? state.wMm + state.bleedMm * 2 : state.wMm;
+    const totalH = state.bleed ? state.hMm + state.bleedMm * 2 : state.hMm;
+    const multiplier = sel.k / gcd(totalW, totalH);
+    const bleedPx = state.bleed ? state.bleedMm * multiplier : 0;
+    const guides = [];
+    for (const q of guideState.queue) {
+      const computed = computeGuidesForQueue(q, sel.wPx, sel.hPx, state.bleed ? state.bleedMm : 0, multiplier);
+      for (const g of computed) guides.push(g);
+    }
+    parent.postMessage({
+      pluginMessage: {
+        type: 'create-frame',
+        widthPx: sel.wPx,
+        heightPx: sel.hPx,
+        bleed: state.bleed,
+        bleedMm: state.bleedMm,
+        bleedPx: sel.bleedPx,
+        widthMm: totalW,
+        heightMm: totalH,
+        trimWidthMm: state.wMm,
+        trimHeightMm: state.hMm,
+        multiplier,
+        guides,
+      }
+    }, '*');
+  } else {
+    const info = guideState.selectionInfo;
+    if (!info || !info.parseable) return;
+    const multiplier = info.frameWidth / info.totalW;
+    const guides = [];
+    for (const q of guideState.queue) {
+      const computed = computeGuidesForQueue(q, info.frameWidth, info.frameHeight, info.bleedMm, multiplier);
+      for (const g of computed) guides.push(g);
+    }
+    const removeExisting = document.getElementById('removeExistingToggle').checked;
+    parent.postMessage({
+      pluginMessage: { type: 'apply-guides', guides, removeExisting }
+    }, '*');
+  }
+});
+
 window.onmessage = e => {
-  if (e.data.pluginMessage?.type === 'done') {}
+  const msg = e.data.pluginMessage;
+  if (!msg) return;
+  if (msg.type === 'done') {}
+  if (msg.type === 'selection-info') {
+    guideState.selectionInfo = msg;
+    renderSelectionCard();
+    updateApplyBtn();
+  }
+  if (msg.type === 'apply-done') {
+    const btn = document.getElementById('applyBtn');
+    btn.textContent = '✓ Guides Applied';
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.textContent = 'Apply Guides to Frame';
+      updateApplyBtn();
+    }, 2000);
+  }
 };
 
 render();
+renderGuideQueue();
+updatePositionHelper();
 parent.postMessage({ pluginMessage: { type: 'resize', height: document.body.scrollHeight } }, '*');
 </script>
 </body>

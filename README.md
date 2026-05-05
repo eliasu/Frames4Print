@@ -14,6 +14,8 @@ You pick a paper format (A1–A6) or enter a custom size in millimeters. The plu
 - Filters to 300 PPI minimum by default (print standard)
 - Optional bleed: adds mm on each side and places Figma guides at the trim line
 - Frame is named with its physical dimensions for easy identification
+- Guide creator: add guides by absolute position or by distance from any trim edge — all measurements are relative to the trim format, not the outer bleed edge
+- Apply guides when creating a new frame, or add them to an existing Frames4Print frame after the fact
 
 ---
 
