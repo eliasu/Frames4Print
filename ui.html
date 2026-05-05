@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Frames4Print</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --accent: #c8ff00;
+    --accent-dim: rgba(200,255,0,0.12);
+    --text: #f0f0f0;
+    --muted: #666;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  header h1 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  header span {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .body { padding: 16px 20px; display: flex; flex-direction: column; gap: 20px; }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .format-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .fmt-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 6px 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    transition: all 0.12s;
+  }
+
+  .fmt-btn .fmt-name { font-size: 13px; font-weight: 600; }
+  .fmt-btn .fmt-mm { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  .fmt-btn:hover { border-color: #444; background: var(--surface2); }
+  .fmt-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .fmt-btn.active .fmt-mm { color: rgba(200,255,0,0.6); }
+
+  .row { display: flex; gap: 8px; align-items: center; }
+  .input-group { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .input-group label { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  input[type="number"] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.12s;
+    -moz-appearance: textfield;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input[type="number"]:focus { border-color: var(--accent); }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+
+  .toggle-label { display: flex; flex-direction: column; gap: 2px; }
+  .toggle-label span:first-child { font-size: 13px; font-weight: 500; }
+  .toggle-label span:last-child { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+  .toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .toggle input:checked + .toggle-track { background: var(--accent); }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    width: 14px; height: 14px;
+    left: 3px; top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+  }
+  .toggle input:checked + .toggle-track::after { transform: translateX(16px); }
+
+  .bleed-mm-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2px;
+  }
+  .bleed-mm-row label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .bleed-mm-row input { max-width: 80px; }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .result-card.ready { border-color: var(--accent); }
+
+  .result-card-header {
+    background: var(--surface2);
+    padding: 8px 14px;
+    font-size: 10px;
+    color: var(--muted);
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .result-cell {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .result-cell:nth-child(even) { border-right: none; }
+  .result-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+  .result-cell .rc-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 3px;
+    font-family: var(--mono);
+  }
+  .result-cell .rc-value {
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--accent);
+  }
+  .result-cell .rc-sub {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+    font-family: var(--mono);
+  }
+
+  .result-cell.full {
+    grid-column: span 2;
+    border-right: none;
+  }
+
+  .no-result {
+    padding: 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: var(--mono);
+  }
+
+  .mult-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+
+  .mult-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .mult-item:hover { border-color: #444; }
+  .mult-item.selected { border-color: var(--accent); background: var(--accent-dim); }
+
+  .mult-item .mi-px { font-family: var(--mono); font-size: 12px; font-weight: 500; }
+  .mult-item .mi-ppi {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .mult-item.selected .mi-ppi { color: rgba(200,255,0,0.7); }
+  .mult-item .mi-badge {
+    font-size: 9px;
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: var(--mono);
+  }
+
+  .cta {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .cta:hover { opacity: 0.9; transform: translateY(-1px); }
+  .cta:active { transform: translateY(0); }
+  .cta:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+  .hidden { display: none !important; }
+
+  scrollbar-width: thin;
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Frames4Print</h1>
+  <span>Print-ready frames for Figma</span>
+</header>
+
+<div class="body">
+
+  <div>
+    <div class="section-label">Format</div>
+    <div class="format-grid" id="fmtGrid"></div>
+  </div>
+
+  <div>
+    <div class="section-label">Custom size (mm)</div>
+    <div class="row">
+      <div class="input-group">
+        <label>WIDTH</label>
+        <input type="number" id="customW" placeholder="e.g. 210" min="1" />
+      </div>
+      <div style="color:var(--muted);padding-top:18px;">×</div>
+      <div class="input-group">
+        <label>HEIGHT</label>
+        <input type="number" id="customH" placeholder="e.g. 297" min="1" />
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Bleed</div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div class="toggle-row">
+        <div class="toggle-label">
+          <span>Add bleed</span>
+          <span id="bleedDesc">Off</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="bleedToggle" />
+          <span class="toggle-track"></span>
+        </label>
+      </div>
+      <div class="bleed-mm-row" id="bleedMmRow" style="display:none">
+        <label>Bleed amount</label>
+        <input type="number" id="bleedMm" value="3" min="0.5" step="0.5" />
+        <label>mm per side</label>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Quality</div>
+    <div class="toggle-row">
+      <div class="toggle-label">
+        <span>Min 300 PPI</span>
+        <span>Filter out low-res multipliers</span>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="minDpiToggle" checked />
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+  </div>
+
+  <div>
+    <div class="section-label">Pixel options <span style="color:#444; font-size:9px; margin-left:4px;">— all have perfect ratio</span></div>
+    <div class="result-card" id="resultCard">
+      <div class="no-result" id="noResult">Select or enter a format above</div>
+      <div id="multList" class="mult-list hidden" style="padding:8px;"></div>
+    </div>
+  </div>
+
+  <div class="result-card" id="detailCard" style="display:none">
+    <div class="result-card-header">Selected resolution</div>
+    <div class="result-grid">
+      <div class="result-cell">
+        <div class="rc-label">WIDTH</div>
+        <div class="rc-value" id="rW">—</div>
+        <div class="rc-sub">px</div>
+      </div>
+      <div class="result-cell">
+        <div class="rc-label">HEIGHT</div>
+        <div class="rc-value" id="rH">—</div>
+        <div class="rc-sub">px</div>
+      </div>
+      <div class="result-cell">
+        <div class="rc-label">PPI</div>
+        <div class="rc-value" id="rPpi">—</div>
+        <div class="rc-sub">pixels per inch</div>
+      </div>
+      <div class="result-cell">
+        <div class="rc-label">MULTIPLIER</div>
+        <div class="rc-value" id="rMult">—</div>
+        <div class="rc-sub">px per mm (ratio unit)</div>
+      </div>
+      <div class="result-cell full" id="bleedInfo" style="display:none">
+        <div class="rc-label">BLEED GUIDES</div>
+        <div class="rc-value" id="rBleed">—</div>
+        <div class="rc-sub">px inset on each side</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="cta" id="createBtn" disabled>Create Frame</button>
+
+</div>
+
+<script>
+const FORMATS = [
+  { name: 'A1', w: 594, h: 841 },
+  { name: 'A2', w: 420, h: 594 },
+  { name: 'A3', w: 297, h: 420 },
+  { name: 'A4', w: 210, h: 297 },
+  { name: 'A5', w: 148, h: 210 },
+  { name: 'A6', w: 105, h: 148 },
+];
+
+let state = {
+  wMm: null,
+  hMm: null,
+  bleed: false,
+  bleedMm: 3,
+  minDpi: true,
+  selectedMult: null,
+  multipliers: [],
+};
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+
+const MM_PER_INCH = 25.4;
+
+function computeMultipliers(wMm, hMm, bleedMm, useBleed, minDpi) {
+  const totalW = useBleed ? wMm + bleedMm * 2 : wMm;
+  const totalH = useBleed ? hMm + bleedMm * 2 : hMm;
+
+  const g = gcd(totalW, totalH);
+  const rW = totalW / g;
+  const rH = totalH / g;
+
+  const results = [];
+
+  for (let k = 1; k <= 500; k++) {
+    const wPx = rW * k;
+    const hPx = rH * k;
+    const ppi = (wPx / (totalW / MM_PER_INCH));
+
+    if (useBleed) {
+      const bleedPx = bleedMm * k / g;
+      if (!Number.isInteger(bleedPx)) continue;
+    }
+
+    if (minDpi && ppi < 300) continue;
+
+    results.push({ k, wPx, hPx, ppi: Math.round(ppi), bleedPx: useBleed ? Math.round(bleedMm * k / g) : 0 });
+
+    if (results.length >= 8) break;
+  }
+
+  return results;
+}
+
+function render() {
+  const { wMm, hMm, bleed, bleedMm, minDpi, selectedMult, multipliers } = state;
+
+  document.getElementById('bleedMmRow').style.display = bleed ? 'flex' : 'none';
+  document.getElementById('bleedDesc').textContent = bleed ? `${bleedMm}mm per side` : 'Off';
+
+  if (!wMm || !hMm) {
+    document.getElementById('noResult').style.display = 'block';
+    document.getElementById('multList').classList.add('hidden');
+    document.getElementById('detailCard').style.display = 'none';
+    document.getElementById('createBtn').disabled = true;
+    return;
+  }
+
+  const mults = computeMultipliers(wMm, hMm, bleedMm, bleed, minDpi);
+  state.multipliers = mults;
+
+  const noResult = document.getElementById('noResult');
+  const multList = document.getElementById('multList');
+
+  if (mults.length === 0) {
+    noResult.textContent = 'No clean pixel values found. Try disabling min 300 PPI.';
+    noResult.style.display = 'block';
+    multList.classList.add('hidden');
+    document.getElementById('detailCard').style.display = 'none';
+    document.getElementById('createBtn').disabled = true;
+    return;
+  }
+
+  noResult.style.display = 'none';
+  multList.classList.remove('hidden');
+
+  if (!state.selectedMult || !mults.find(m => m.k === state.selectedMult.k)) {
+    state.selectedMult = mults[0];
+  }
+
+  multList.innerHTML = mults.map((m, i) => `
+    <div class="mult-item ${state.selectedMult && m.k === state.selectedMult.k ? 'selected' : ''}" data-k="${m.k}">
+      <span class="mi-px">${m.wPx} × ${m.hPx} px</span>
+      <span class="mi-ppi">${m.ppi} PPI${m.bleedPx ? ` · guide ${m.bleedPx}px` : ''}</span>
+      ${i === 0 ? '<span class="mi-badge">BEST</span>' : ''}
+    </div>
+  `).join('');
+
+  multList.querySelectorAll('.mult-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const k = parseInt(el.dataset.k);
+      state.selectedMult = state.multipliers.find(m => m.k === k);
+      render();
+    });
+  });
+
+  const sel = state.selectedMult;
+  if (sel) {
+    document.getElementById('detailCard').style.display = 'block';
+    document.getElementById('rW').textContent = sel.wPx;
+    document.getElementById('rH').textContent = sel.hPx;
+    document.getElementById('rPpi').textContent = sel.ppi;
+    document.getElementById('rMult').textContent = `×${sel.k / gcd(wMm + (bleed ? bleedMm*2 : 0), hMm + (bleed ? bleedMm*2 : 0))}`;
+    const bleedInfo = document.getElementById('bleedInfo');
+    if (bleed && sel.bleedPx) {
+      bleedInfo.style.display = 'block';
+      document.getElementById('rBleed').textContent = sel.bleedPx;
+    } else {
+      bleedInfo.style.display = 'none';
+    }
+    document.getElementById('createBtn').disabled = false;
+  }
+}
+
+const grid = document.getElementById('fmtGrid');
+FORMATS.forEach(fmt => {
+  const btn = document.createElement('button');
+  btn.className = 'fmt-btn';
+  btn.dataset.name = fmt.name;
+  btn.innerHTML = `<span class="fmt-name">${fmt.name}</span><span class="fmt-mm">${fmt.w}×${fmt.h}mm</span>`;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('customW').value = '';
+    document.getElementById('customH').value = '';
+    state.wMm = fmt.w;
+    state.hMm = fmt.h;
+    state.selectedMult = null;
+    render();
+  });
+  grid.appendChild(btn);
+});
+
+['customW', 'customH'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const w = parseFloat(document.getElementById('customW').value);
+    const h = parseFloat(document.getElementById('customH').value);
+    if (w > 0 && h > 0) {
+      document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+      state.wMm = w;
+      state.hMm = h;
+      state.selectedMult = null;
+      render();
+    }
+  });
+});
+
+document.getElementById('bleedToggle').addEventListener('change', e => {
+  state.bleed = e.target.checked;
+  state.selectedMult = null;
+  render();
+});
+
+document.getElementById('bleedMm').addEventListener('input', e => {
+  state.bleedMm = parseFloat(e.target.value) || 3;
+  state.selectedMult = null;
+  render();
+});
+
+document.getElementById('minDpiToggle').addEventListener('change', e => {
+  state.minDpi = e.target.checked;
+  state.selectedMult = null;
+  render();
+});
+
+document.getElementById('createBtn').addEventListener('click', () => {
+  const sel = state.selectedMult;
+  if (!sel) return;
+  const totalW = state.bleed ? state.wMm + state.bleedMm * 2 : state.wMm;
+  const totalH = state.bleed ? state.hMm + state.bleedMm * 2 : state.hMm;
+  parent.postMessage({
+    pluginMessage: {
+      type: 'create-frame',
+      widthPx: sel.wPx,
+      heightPx: sel.hPx,
+      bleed: state.bleed,
+      bleedMm: state.bleedMm,
+      bleedPx: sel.bleedPx,
+      widthMm: totalW,
+      heightMm: totalH,
+      multiplier: sel.k / gcd(totalW, totalH),
+    }
+  }, '*');
+  document.getElementById('createBtn').textContent = '✓ Frame Created';
+  document.getElementById('createBtn').disabled = true;
+  setTimeout(() => {
+    document.getElementById('createBtn').textContent = 'Create Frame';
+    document.getElementById('createBtn').disabled = false;
+  }, 2000);
+});
+
+window.onmessage = e => {
+  if (e.data.pluginMessage?.type === 'done') {}
+};
+
+render();
+</script>
+</body>
+</html>
