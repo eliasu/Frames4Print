@@ -10,7 +10,10 @@ figma.ui.onmessage = async (msg: {
   widthPx?: number;
   heightPx?: number;
   bleed?: boolean;
-  bleedMm?: number;
+  bleedTopMm?: number;
+  bleedRightMm?: number;
+  bleedBottomMm?: number;
+  bleedLeftMm?: number;
   widthMm?: number;
   heightMm?: number;
   trimWidthMm?: number;
@@ -21,14 +24,18 @@ figma.ui.onmessage = async (msg: {
   height?: number;
 }) => {
   if (msg.type === 'create-frame') {
-    const { widthPx, heightPx, bleed, bleedMm, widthMm, heightMm, trimWidthMm, trimHeightMm, multiplier, guides } = msg;
+    const { widthPx, heightPx, bleed, bleedTopMm, bleedRightMm, bleedBottomMm, bleedLeftMm, widthMm, heightMm, trimWidthMm, trimHeightMm, multiplier, guides } = msg;
 
     await figma.loadFontAsync({ family: "Inter", style: "Regular" });
 
     const frame = figma.createFrame();
-    frame.name = bleed
-      ? `Print — ${trimWidthMm}×${trimHeightMm}mm + ${bleedMm}mm (${widthMm}×${heightMm}mm)`
-      : `Print — ${widthMm}×${heightMm}mm`;
+    if (bleed) {
+      const isUniform = bleedTopMm === bleedRightMm && bleedRightMm === bleedBottomMm && bleedBottomMm === bleedLeftMm;
+      const bleedStr = isUniform ? `${bleedTopMm}mm` : `${bleedTopMm}/${bleedRightMm}/${bleedBottomMm}/${bleedLeftMm}mm`;
+      frame.name = `Print — ${trimWidthMm}×${trimHeightMm}mm + ${bleedStr} (${widthMm}×${heightMm}mm)`;
+    } else {
+      frame.name = `Print — ${widthMm}×${heightMm}mm`;
+    }
     frame.resize(widthPx!, heightPx!);
 
     const center = figma.viewport.center;
@@ -42,24 +49,19 @@ figma.ui.onmessage = async (msg: {
     const frameGuides: Guide[] = [];
 
     if (bleed) {
-      const bleedPx = Math.round(bleedMm! * multiplier!);
       frameGuides.push(
-        { axis: 'X', offset: bleedPx },
-        { axis: 'X', offset: widthPx! - bleedPx },
-        { axis: 'Y', offset: bleedPx },
-        { axis: 'Y', offset: heightPx! - bleedPx },
+        { axis: 'X', offset: Math.round(bleedLeftMm! * multiplier!) },
+        { axis: 'X', offset: widthPx! - Math.round(bleedRightMm! * multiplier!) },
+        { axis: 'Y', offset: Math.round(bleedTopMm! * multiplier!) },
+        { axis: 'Y', offset: heightPx! - Math.round(bleedBottomMm! * multiplier!) },
       );
     }
 
     if (guides && guides.length > 0) {
-      for (const g of guides) {
-        frameGuides.push(g);
-      }
+      for (const g of guides) frameGuides.push(g);
     }
 
-    if (frameGuides.length > 0) {
-      frame.guides = frameGuides;
-    }
+    if (frameGuides.length > 0) frame.guides = frameGuides;
 
     figma.ui.postMessage({ type: 'done' });
   }
@@ -73,25 +75,40 @@ figma.ui.onmessage = async (msg: {
     const node = sel[0] as FrameNode;
     const name = node.name;
     const noBleed = name.match(/^Print — (\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm$/);
-    const withBleed = name.match(/^Print — (\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm \+ (\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
+    const uniformBleed = name.match(/^Print — (\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm \+ (\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
+    const perSideBleed = name.match(/^Print — (\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm \+ (\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
     if (noBleed) {
       const trimW = parseFloat(noBleed[1]);
       const trimH = parseFloat(noBleed[2]);
       figma.ui.postMessage({
         type: 'selection-info', found: true, parseable: true, name,
-        trimW, trimH, bleedMm: 0, totalW: trimW, totalH: trimH,
-        frameWidth: node.width, frameHeight: node.height,
+        trimW, trimH, bleedMm: 0, bleedTopMm: 0, bleedRightMm: 0, bleedBottomMm: 0, bleedLeftMm: 0,
+        totalW: trimW, totalH: trimH, frameWidth: node.width, frameHeight: node.height,
       });
-    } else if (withBleed) {
-      const trimW = parseFloat(withBleed[1]);
-      const trimH = parseFloat(withBleed[2]);
-      const bleedMm = parseFloat(withBleed[3]);
-      const totalW = parseFloat(withBleed[4]);
-      const totalH = parseFloat(withBleed[5]);
+    } else if (uniformBleed) {
+      const trimW = parseFloat(uniformBleed[1]);
+      const trimH = parseFloat(uniformBleed[2]);
+      const bleedMm = parseFloat(uniformBleed[3]);
+      const totalW = parseFloat(uniformBleed[4]);
+      const totalH = parseFloat(uniformBleed[5]);
       figma.ui.postMessage({
         type: 'selection-info', found: true, parseable: true, name,
-        trimW, trimH, bleedMm, totalW, totalH,
-        frameWidth: node.width, frameHeight: node.height,
+        trimW, trimH, bleedMm, bleedTopMm: bleedMm, bleedRightMm: bleedMm, bleedBottomMm: bleedMm, bleedLeftMm: bleedMm,
+        totalW, totalH, frameWidth: node.width, frameHeight: node.height,
+      });
+    } else if (perSideBleed) {
+      const trimW = parseFloat(perSideBleed[1]);
+      const trimH = parseFloat(perSideBleed[2]);
+      const bleedTopMm = parseFloat(perSideBleed[3]);
+      const bleedRightMm = parseFloat(perSideBleed[4]);
+      const bleedBottomMm = parseFloat(perSideBleed[5]);
+      const bleedLeftMm = parseFloat(perSideBleed[6]);
+      const totalW = parseFloat(perSideBleed[7]);
+      const totalH = parseFloat(perSideBleed[8]);
+      figma.ui.postMessage({
+        type: 'selection-info', found: true, parseable: true, name,
+        trimW, trimH, bleedMm: bleedTopMm, bleedTopMm, bleedRightMm, bleedBottomMm, bleedLeftMm,
+        totalW, totalH, frameWidth: node.width, frameHeight: node.height,
       });
     } else {
       figma.ui.postMessage({ type: 'selection-info', found: true, parseable: false, name });
@@ -105,16 +122,24 @@ figma.ui.onmessage = async (msg: {
     const node = sel[0] as FrameNode;
     let existing: Guide[] = [...node.guides] as Guide[];
     if (removeExisting) {
-      const withBleed = node.name.match(/\+ (\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
-      if (withBleed) {
-        const bleedMm = parseFloat(withBleed[1]);
-        const totalW = parseFloat(withBleed[2]);
-        const mult = node.width / totalW;
-        const bleedPx = bleedMm * mult;
+      const uniformBleed = node.name.match(/\+ (\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
+      const perSideBleed = node.name.match(/\+ (\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)mm \((\d+(?:\.\d+)?)×(\d+(?:\.\d+)?)mm\)$/);
+      if (uniformBleed || perSideBleed) {
+        let tPx: number, rPx: number, bPx: number, lPx: number;
+        if (uniformBleed) {
+          const mult = node.width / parseFloat(uniformBleed[2]);
+          tPx = rPx = bPx = lPx = parseFloat(uniformBleed[1]) * mult;
+        } else {
+          const mult = node.width / parseFloat(perSideBleed![5]);
+          tPx = parseFloat(perSideBleed![1]) * mult;
+          rPx = parseFloat(perSideBleed![2]) * mult;
+          bPx = parseFloat(perSideBleed![3]) * mult;
+          lPx = parseFloat(perSideBleed![4]) * mult;
+        }
         const tol = 0.5;
         existing = existing.filter(g =>
-          (g.axis === 'X' && (Math.abs(g.offset - bleedPx) < tol || Math.abs(g.offset - (node.width - bleedPx)) < tol)) ||
-          (g.axis === 'Y' && (Math.abs(g.offset - bleedPx) < tol || Math.abs(g.offset - (node.height - bleedPx)) < tol))
+          (g.axis === 'X' && (Math.abs(g.offset - lPx) < tol || Math.abs(g.offset - (node.width - rPx)) < tol)) ||
+          (g.axis === 'Y' && (Math.abs(g.offset - tPx) < tol || Math.abs(g.offset - (node.height - bPx)) < tol))
         );
       } else {
         existing = [];

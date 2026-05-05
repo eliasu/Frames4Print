@@ -220,6 +220,14 @@
   .bleed-mm-row label { font-size: 11px; color: var(--muted); white-space: nowrap; }
   .bleed-mm-row input { max-width: 80px; }
 
+  #bleedMmRow { flex-direction: column; gap: 8px; }
+
+  .bleed-per-side-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
   .result-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -547,10 +555,22 @@
           <span class="toggle-track"></span>
         </label>
       </div>
-      <div class="bleed-mm-row" id="bleedMmRow" style="display:none">
-        <label>Bleed amount</label>
-        <input type="number" id="bleedMm" value="3" min="0.5" step="0.5" />
-        <label>mm per side</label>
+      <div id="bleedMmRow" style="display:none">
+        <div class="bleed-mm-row">
+          <label>Bleed amount</label>
+          <input type="number" id="bleedMm" value="3" min="0.5" step="0.5" />
+          <label>mm per side</label>
+          <button id="bleedSplitBtn" class="clear-link" style="margin-left:auto; white-space:nowrap;">per side ↓</button>
+        </div>
+        <div id="bleedPerSideInputs" class="hidden" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+          <div class="bleed-per-side-grid">
+            <div class="input-group"><label>TOP</label><input type="number" id="bleedTop" value="3" min="0" step="0.5" /></div>
+            <div class="input-group"><label>RIGHT</label><input type="number" id="bleedRight" value="3" min="0" step="0.5" /></div>
+            <div class="input-group"><label>BOTTOM</label><input type="number" id="bleedBottom" value="3" min="0" step="0.5" /></div>
+            <div class="input-group"><label>LEFT</label><input type="number" id="bleedLeft" value="3" min="0" step="0.5" /></div>
+          </div>
+          <button id="bleedSyncBtn" class="clear-link">← same on all sides</button>
+        </div>
       </div>
     </div>
   </div>
@@ -603,7 +623,7 @@
       <div class="result-cell full" id="bleedInfo" style="display:none">
         <div class="rc-label">BLEED GUIDES</div>
         <div class="rc-value" id="rBleed">—</div>
-        <div class="rc-sub">px inset on each side</div>
+        <div class="rc-sub" id="rBleedSub">px inset on each side</div>
       </div>
     </div>
   </div>
@@ -718,10 +738,20 @@ let state = {
   hMm: null,
   bleed: false,
   bleedMm: 3,
+  bleedPerSide: false,
+  bleedTop: 3, bleedRight: 3, bleedBottom: 3, bleedLeft: 3,
   minDpi: true,
   selectedMult: null,
   multipliers: [],
+  totalW: null,
+  totalH: null,
 };
+
+function getBleedSides() {
+  if (!state.bleed) return { t: 0, r: 0, b: 0, l: 0 };
+  if (!state.bleedPerSide) return { t: state.bleedMm, r: state.bleedMm, b: state.bleedMm, l: state.bleedMm };
+  return { t: state.bleedTop, r: state.bleedRight, b: state.bleedBottom, l: state.bleedLeft };
+}
 
 let guideState = {
   mode: 'position',
@@ -737,41 +767,44 @@ function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
 
 const MM_PER_INCH = 25.4;
 
-function computeMultipliers(wMm, hMm, bleedMm, useBleed, minDpi) {
-  const totalW = useBleed ? wMm + bleedMm * 2 : wMm;
-  const totalH = useBleed ? hMm + bleedMm * 2 : hMm;
-
+function computeMultipliers(totalW, totalH, minDpi) {
   const g = gcd(totalW, totalH);
   const rW = totalW / g;
   const rH = totalH / g;
 
+  // Jump directly to the k that first satisfies 300 PPI instead of scanning from 1.
+  // ppi = rW*k / (totalW/MM_PER_INCH) = k*MM_PER_INCH*rW/totalW = k*MM_PER_INCH/g
+  // so k_min = ceil(300 * g / MM_PER_INCH)
+  const startK = minDpi ? Math.ceil(300 * g / MM_PER_INCH) : 1;
   const results = [];
 
-  for (let k = 1; k <= 500; k++) {
+  for (let k = startK; results.length < 8; k++) {
     const wPx = rW * k;
     const hPx = rH * k;
-    const ppi = (wPx / (totalW / MM_PER_INCH));
-
-    if (useBleed) {
-      const bleedPx = bleedMm * k / g;
-      if (!Number.isInteger(bleedPx)) continue;
-    }
-
-    if (minDpi && ppi < 300) continue;
-
-    results.push({ k, wPx, hPx, ppi: Math.round(ppi), bleedPx: useBleed ? Math.round(bleedMm * k / g) : 0 });
-
-    if (results.length >= 8) break;
+    const ppi = wPx / (totalW / MM_PER_INCH);
+    results.push({ k, wPx, hPx, ppi: Math.round(ppi) });
   }
 
   return results;
 }
 
 function render() {
-  const { wMm, hMm, bleed, bleedMm, minDpi, selectedMult, multipliers } = state;
+  const { wMm, hMm, bleed, bleedMm, minDpi } = state;
+  const bv = getBleedSides();
+  const totalW = wMm ? (bleed ? wMm + bv.l + bv.r : wMm) : null;
+  const totalH = hMm ? (bleed ? hMm + bv.t + bv.b : hMm) : null;
+  state.totalW = totalW;
+  state.totalH = totalH;
 
   document.getElementById('bleedMmRow').style.display = bleed ? 'flex' : 'none';
-  document.getElementById('bleedDesc').textContent = bleed ? `${bleedMm}mm per side` : 'Off';
+  if (bleed) {
+    const isUniform = !state.bleedPerSide;
+    document.getElementById('bleedDesc').textContent = isUniform
+      ? `${bleedMm}mm per side`
+      : `T${bv.t} R${bv.r} B${bv.b} L${bv.l}mm`;
+  } else {
+    document.getElementById('bleedDesc').textContent = 'Off';
+  }
 
   if (!wMm || !hMm) {
     document.getElementById('noResult').style.display = 'block';
@@ -782,7 +815,7 @@ function render() {
     return;
   }
 
-  const mults = computeMultipliers(wMm, hMm, bleedMm, bleed, minDpi);
+  const mults = computeMultipliers(totalW, totalH, minDpi);
   state.multipliers = mults;
 
   const noResult = document.getElementById('noResult');
@@ -808,7 +841,7 @@ function render() {
   multList.innerHTML = mults.map((m, i) => `
     <div class="mult-item ${state.selectedMult && m.k === state.selectedMult.k ? 'selected' : ''}" data-k="${m.k}">
       <span class="mi-px">${m.wPx} × ${m.hPx} px</span>
-      <span class="mi-ppi">${m.ppi} PPI${m.bleedPx ? ` · guide ${m.bleedPx}px` : ''}</span>
+      <span class="mi-ppi">${m.ppi} PPI</span>
       ${i === 0 ? '<span class="mi-badge">BEST</span>' : ''}
     </div>
   `).join('');
@@ -827,11 +860,19 @@ function render() {
     document.getElementById('rW').textContent = sel.wPx;
     document.getElementById('rH').textContent = sel.hPx;
     document.getElementById('rPpi').textContent = sel.ppi;
-    document.getElementById('rMult').textContent = `×${sel.k / gcd(wMm + (bleed ? bleedMm*2 : 0), hMm + (bleed ? bleedMm*2 : 0))}`;
+    document.getElementById('rMult').textContent = `×${sel.k / gcd(totalW, totalH)}`;
     const bleedInfo = document.getElementById('bleedInfo');
-    if (bleed && sel.bleedPx) {
+    if (bleed) {
+      const mult = sel.k / gcd(totalW, totalH);
+      const isUniform = !state.bleedPerSide;
       bleedInfo.style.display = 'block';
-      document.getElementById('rBleed').textContent = sel.bleedPx;
+      if (isUniform) {
+        document.getElementById('rBleed').textContent = Math.round(bv.t * mult);
+        document.getElementById('rBleedSub').textContent = 'px inset on each side';
+      } else {
+        document.getElementById('rBleed').textContent = `T:${Math.round(bv.t*mult)} R:${Math.round(bv.r*mult)} B:${Math.round(bv.b*mult)} L:${Math.round(bv.l*mult)}`;
+        document.getElementById('rBleedSub').textContent = 'px (top · right · bottom · left)';
+      }
     } else {
       bleedInfo.style.display = 'none';
     }
@@ -846,7 +887,10 @@ function getFrameConfigLabel() {
   const fmt = FORMATS.find(f => f.w === state.wMm && f.h === state.hMm);
   const fmtName = fmt ? fmt.name : `${state.wMm}×${state.hMm}mm`;
   const ppi = state.selectedMult.ppi;
-  const bleedPart = state.bleed ? ` · +${state.bleedMm}mm bleed` : '';
+  const bv = getBleedSides();
+  const bleedPart = state.bleed
+    ? ` · +${state.bleedPerSide ? `${bv.t}/${bv.r}/${bv.b}/${bv.l}` : state.bleedMm}mm bleed`
+    : '';
   return `${fmtName} · ${state.wMm}×${state.hMm}mm · ${ppi} PPI${bleedPart}`;
 }
 
@@ -909,18 +953,17 @@ function updatePositionHelper() {
   }
 }
 
-function computeGuidesForQueue(queueItem, frameW, frameH, bleedMm, multiplier) {
-  const bleedPx = bleedMm * multiplier;
-  if (queueItem.type === 'position') {
-    return [{ axis: queueItem.axis, offset: bleedPx + queueItem.mm * multiplier }];
-  }
-  const guides = [];
+function computeGuidesForQueue(queueItem, frameW, frameH, bleedT, bleedR, bleedB, bleedL, multiplier) {
   const dist = queueItem.mm * multiplier;
-  if (queueItem.edge === 'top') guides.push({ axis: 'Y', offset: bleedPx + dist });
-  if (queueItem.edge === 'bottom') guides.push({ axis: 'Y', offset: frameH - bleedPx - dist });
-  if (queueItem.edge === 'left') guides.push({ axis: 'X', offset: bleedPx + dist });
-  if (queueItem.edge === 'right') guides.push({ axis: 'X', offset: frameW - bleedPx - dist });
-  return guides;
+  if (queueItem.type === 'position') {
+    if (queueItem.axis === 'X') return [{ axis: 'X', offset: bleedL * multiplier + dist }];
+    else return [{ axis: 'Y', offset: bleedT * multiplier + dist }];
+  }
+  if (queueItem.edge === 'top')    return [{ axis: 'Y', offset: bleedT * multiplier + dist }];
+  if (queueItem.edge === 'bottom') return [{ axis: 'Y', offset: frameH - bleedB * multiplier - dist }];
+  if (queueItem.edge === 'left')   return [{ axis: 'X', offset: bleedL * multiplier + dist }];
+  if (queueItem.edge === 'right')  return [{ axis: 'X', offset: frameW - bleedR * multiplier - dist }];
+  return [];
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -977,6 +1020,38 @@ document.getElementById('bleedMm').addEventListener('input', e => {
   render();
 });
 
+document.getElementById('bleedSplitBtn').addEventListener('click', () => {
+  state.bleedPerSide = true;
+  state.bleedTop = state.bleedMm;
+  state.bleedRight = state.bleedMm;
+  state.bleedBottom = state.bleedMm;
+  state.bleedLeft = state.bleedMm;
+  document.getElementById('bleedTop').value = state.bleedMm;
+  document.getElementById('bleedRight').value = state.bleedMm;
+  document.getElementById('bleedBottom').value = state.bleedMm;
+  document.getElementById('bleedLeft').value = state.bleedMm;
+  document.getElementById('bleedPerSideInputs').classList.remove('hidden');
+  document.getElementById('bleedSplitBtn').classList.add('hidden');
+  state.selectedMult = null;
+  render();
+});
+
+document.getElementById('bleedSyncBtn').addEventListener('click', () => {
+  state.bleedPerSide = false;
+  document.getElementById('bleedPerSideInputs').classList.add('hidden');
+  document.getElementById('bleedSplitBtn').classList.remove('hidden');
+  state.selectedMult = null;
+  render();
+});
+
+['bleedTop', 'bleedRight', 'bleedBottom', 'bleedLeft'].forEach(id => {
+  document.getElementById(id).addEventListener('input', e => {
+    state[id] = parseFloat(e.target.value) || 0;
+    state.selectedMult = null;
+    render();
+  });
+});
+
 document.getElementById('minDpiToggle').addEventListener('change', e => {
   state.minDpi = e.target.checked;
   state.selectedMult = null;
@@ -986,21 +1061,22 @@ document.getElementById('minDpiToggle').addEventListener('change', e => {
 document.getElementById('createBtn').addEventListener('click', () => {
   const sel = state.selectedMult;
   if (!sel) return;
-  const totalW = state.bleed ? state.wMm + state.bleedMm * 2 : state.wMm;
-  const totalH = state.bleed ? state.hMm + state.bleedMm * 2 : state.hMm;
+  const bv = getBleedSides();
+  const totalW = state.totalW;
+  const totalH = state.totalH;
+  const multiplier = sel.k / gcd(totalW, totalH);
   parent.postMessage({
     pluginMessage: {
       type: 'create-frame',
       widthPx: sel.wPx,
       heightPx: sel.hPx,
       bleed: state.bleed,
-      bleedMm: state.bleedMm,
-      bleedPx: sel.bleedPx,
+      bleedTopMm: bv.t, bleedRightMm: bv.r, bleedBottomMm: bv.b, bleedLeftMm: bv.l,
       widthMm: totalW,
       heightMm: totalH,
       trimWidthMm: state.wMm,
       trimHeightMm: state.hMm,
-      multiplier: sel.k / gcd(totalW, totalH),
+      multiplier,
     }
   }, '*');
   document.getElementById('createBtn').textContent = '✓ Frame Created';
@@ -1130,13 +1206,13 @@ document.getElementById('applyBtn').addEventListener('click', () => {
   if (guideState.applyTarget === 'new') {
     const sel = state.selectedMult;
     if (!sel) return;
-    const totalW = state.bleed ? state.wMm + state.bleedMm * 2 : state.wMm;
-    const totalH = state.bleed ? state.hMm + state.bleedMm * 2 : state.hMm;
+    const bv = getBleedSides();
+    const totalW = state.totalW;
+    const totalH = state.totalH;
     const multiplier = sel.k / gcd(totalW, totalH);
-    const bleedPx = state.bleed ? state.bleedMm * multiplier : 0;
     const guides = [];
     for (const q of guideState.queue) {
-      const computed = computeGuidesForQueue(q, sel.wPx, sel.hPx, state.bleed ? state.bleedMm : 0, multiplier);
+      const computed = computeGuidesForQueue(q, sel.wPx, sel.hPx, bv.t, bv.r, bv.b, bv.l, multiplier);
       for (const g of computed) guides.push(g);
     }
     parent.postMessage({
@@ -1145,8 +1221,7 @@ document.getElementById('applyBtn').addEventListener('click', () => {
         widthPx: sel.wPx,
         heightPx: sel.hPx,
         bleed: state.bleed,
-        bleedMm: state.bleedMm,
-        bleedPx: sel.bleedPx,
+        bleedTopMm: bv.t, bleedRightMm: bv.r, bleedBottomMm: bv.b, bleedLeftMm: bv.l,
         widthMm: totalW,
         heightMm: totalH,
         trimWidthMm: state.wMm,
@@ -1161,7 +1236,7 @@ document.getElementById('applyBtn').addEventListener('click', () => {
     const multiplier = info.frameWidth / info.totalW;
     const guides = [];
     for (const q of guideState.queue) {
-      const computed = computeGuidesForQueue(q, info.frameWidth, info.frameHeight, info.bleedMm, multiplier);
+      const computed = computeGuidesForQueue(q, info.frameWidth, info.frameHeight, info.bleedTopMm ?? info.bleedMm, info.bleedRightMm ?? info.bleedMm, info.bleedBottomMm ?? info.bleedMm, info.bleedLeftMm ?? info.bleedMm, multiplier);
       for (const g of computed) guides.push(g);
     }
     const removeExisting = document.getElementById('removeExistingToggle').checked;
