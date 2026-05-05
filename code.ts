@@ -21,18 +21,12 @@ figma.ui.onmessage = async (msg) => {
     if (bleed) {
       const bleedPx = Math.round(bleedMm * multiplier);
 
-      const fx = frame.x;
-      const fy = frame.y;
-
-      const guides: Guide[] = [
-        { axis: 'X', offset: fx + bleedPx },
-        { axis: 'X', offset: fx + widthPx - bleedPx },
-        { axis: 'Y', offset: fy + bleedPx },
-        { axis: 'Y', offset: fy + heightPx - bleedPx },
+      frame.guides = [
+        { axis: 'X', offset: bleedPx },
+        { axis: 'X', offset: widthPx - bleedPx },
+        { axis: 'Y', offset: bleedPx },
+        { axis: 'Y', offset: heightPx - bleedPx },
       ];
-
-      const currentGuides = figma.currentPage.guides || [];
-      figma.currentPage.guides = [...currentGuides, ...guides];
     }
 
     figma.ui.postMessage({ type: 'done' });
