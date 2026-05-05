@@ -1,40 +1,39 @@
-Below are the steps to get your plugin running. You can also find instructions at:
+# Frames4Print
 
-  https://www.figma.com/plugin-docs/plugin-quickstart-guide/
+A Figma plugin for creating print-ready frames with correct pixel dimensions.
 
-This plugin template uses Typescript and NPM, two standard tools in creating JavaScript applications.
+---
 
-First, download Node.js which comes with NPM. This will allow you to install TypeScript and other
-libraries. You can find the download link here:
+## What it does
 
-  https://nodejs.org/en/download/
+You pick a paper format (A1–A6) or enter a custom size in millimeters. The plugin calculates pixel dimensions that map cleanly to that physical size at a given resolution — no rounding errors, no fractional pixels. Optionally adds bleed with Figma guides placed at exact inset positions.
 
-Next, install TypeScript using the command:
+**Key features:**
+- A1–A6 presets + custom mm input
+- Shows multiple resolution options (all with perfect integer pixel ratios)
+- Filters to 300 PPI minimum by default (print standard)
+- Optional bleed: adds mm on each side and places Figma guides at the trim line
+- Frame is named with its physical dimensions for easy identification
 
-  npm install -g typescript
+---
 
-Finally, in the directory of your plugin, get the latest type definitions for the plugin API by running:
+## Why this matters
 
-  npm install --save-dev @figma/plugin-typings
+Figma works in pixels. Print works in millimeters. The conversion between them is not always clean.
 
-If you are familiar with JavaScript, TypeScript will look very familiar. In fact, valid JavaScript code
-is already valid Typescript code.
+If you just multiply millimeters by a rough number (e.g. `210mm × 11.811 = 2480.01px`), you get fractional pixels. Figma rounds these, which means your frame dimensions no longer correspond exactly to the physical size. At 300 PPI, a 1px error across 210mm is small — but it compounds: guides sit in the wrong place, bleeds don't align, and exported files handed to a print shop may produce unexpected results.
 
-TypeScript adds type annotations to variables. This allows code editors such as Visual Studio Code
-to provide information about the Figma API while you are writing code, as well as help catch bugs
-you previously didn't notice.
+This plugin finds multipliers where the math works out to whole numbers for both dimensions simultaneously — so the frame you design in is exactly the sheet the printer sees.
 
-For more information, visit https://www.typescriptlang.org/
+---
 
-Using TypeScript requires a compiler to convert TypeScript (code.ts) into JavaScript (code.js)
-for the browser to run.
+## Setup
 
-We recommend writing TypeScript code using Visual Studio code:
+```bash
+npm install
+npm run watch   # compiles code.ts → code.js on save
+```
 
-1. Download Visual Studio Code if you haven't already: https://code.visualstudio.com/.
-2. Open this directory in Visual Studio Code.
-3. Compile TypeScript to JavaScript: Run the "Terminal > Run Build Task..." menu item,
-    then select "npm: watch". You will have to do this again every time
-    you reopen Visual Studio Code.
+In Figma: **Plugins → Development → Import plugin from manifest** → select `manifest.json`.
 
-That's it! Visual Studio Code will regenerate the JavaScript file every time you save.
+> `code.js` is already compiled and committed, so you can load the plugin without a build step if you're not editing `code.ts`.
